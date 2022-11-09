@@ -23,11 +23,14 @@ class ProductSimpleResource extends JsonResource
             'display_name' => $this->display_name,
             'price' => $this->price,
             'stock' => $this->stock,
+            $this->mergeWhen($this->pivot->quantity, [
+                'quantity' => $this->pivot->quantity
+            ]),
             $this->mergeWhen($extra, [
-                'one_liner' => $extra ? $extra[0]->value : null,
-                'primary_attr' => $extra ? (int) $extra[1]->value : null,
-                'complexity' => $extra ? (int) $extra[2]->value : null,
-                'attack_type' => $extra ? (int) $extra[3]->value : null
+                $extra[0]->name => $extra[0]->value,
+                $extra[1]->name => (int) $extra[1]->value,
+                $extra[2]->name => (int) $extra[2]->value,
+                $extra[3]->name => (int) $extra[3]->value
             ])
         ];
     }

@@ -16,24 +16,31 @@ class Product extends Model
     {
         $attributes = $this->belongsToMany(Attribute::class, 'attribute_products')
                     ->using(AttributeProduct::class)
-                    ->withPivot('value');
-                    //->withTimestamps();
+                    ->withPivot('value')
+                    ->withTimestamps();
 
         return gatherChilds($attributes->get());
     }
 
     public function categories()
     {
-        return $this->belongsToMany(Category::class, 'category_products')/* ->withTimestamps() */;
+        return $this->belongsToMany(Category::class, 'category_products')->withTimestamps();
     }
 
-    public function extra_columns() //complexity, attack_type
+    public function carts()
+    {
+        return $this->belongsToMany(Cart::class, 'cart_products')->withTimestamps();
+    }
+
+    public function extra_columns($column = [3, 10, 11, 12]) //complexity, attack_type
     {
         $is_hero = $this->categories->contains(1);
 
         if($is_hero) {
-            return DB::table('attribute_products')->select('value')->where('product_id', $this->id)
-            ->whereIn('attribute_id', [3, 10, 11, 12])->orderBy('product_id')->get();
+            return DB::table('attribute_products', 'ap')
+                    ->join('attributes', 'ap.attribute_id', '=', 'attributes.id')
+                    ->select('attributes.name as name', 'ap.value as value')->where('product_id', $this->id)
+                    ->whereIn('attribute_id', $column)->orderBy('product_id')->get();
         }
         return false;
     }
