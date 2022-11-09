@@ -15,7 +15,7 @@ class Attribute extends Model
     {
         return $this->belongsToMany(Product::class, 'attribute_products')
                     ->using(AttributeProduct::class)
-                    ->withPivot('value');
-                    //->withTimestamps();
+                    ->withPivot('value')
+                    ->withTimestamps();
     }
 }

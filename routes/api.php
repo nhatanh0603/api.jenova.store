@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GenerateController;
 use App\Http\Controllers\ProductController;
@@ -39,4 +40,11 @@ Route::prefix('product')->group(function() {
 Route::prefix('category')->group(function(){
     Route::get('/whole', [CategoryController::class, 'index']); //show all category (đã được nhóm)
     Route::get('/{id}/products', [CategoryController::class, 'show']); //show all sản phẩm của category
+});
+
+Route::middleware('auth:sanctum')->prefix('cart')->group(function() {
+    Route::get('/whole', [CartController::class, 'show']);
+    Route::post('/add', [CartController::class, 'store']);
+    Route::patch('/quantity', [CartController::class, 'edit']);
+    Route::delete('/delete', [CartController::class, 'destroy']);
 });
