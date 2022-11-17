@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CartRequest;
 use App\Http\Resources\CartResource;
+use App\Http\Resources\ProductSimpleCollection;
 use App\Models\Cart;
 use App\Models\Product;
 
@@ -19,7 +20,7 @@ class CartController extends Controller
                 'message' => 'Cart does not exist.'
             ], 404);
 
-        $this->syncProducts($cart);
+        $this->syncCartProductQuantity($cart);
 
         return new CartResource(auth()->user()->cart->load('products'));
     }
@@ -74,6 +75,35 @@ class CartController extends Controller
         return new CartResource($cart->load('products'));
     }
 
+    /* Checkout sản phẩm được chọn trong giỏ hàng */
+    public function checkout()
+    {
+        $validated = request()->validate([
+            'checkout' => 'required|array'
+        ]);
+
+        foreach ($validated['checkout'] as $product_id => $quantity) {
+            $product = Product::find($product_id);
+
+            if(!$product)
+                return response()->json([
+                    'message' => 'Product does not exist.'
+                ], 404);
+            else
+                if($product->stock < $quantity)
+                    return response()->json([
+                        'message' => 'Some products are not enough units in stock. Your cart will be updated. Please try again.'
+                    ], 409);
+                else
+                    $id_array[] = $product_id;
+        }
+
+        /* Dòng này để sắp xếp lại thứ tự theo thời gian add to cart */
+        $checkout = auth()->user()->cart->products->whereIn('id', $id_array);
+
+        return new ProductSimpleCollection($checkout);
+    }
+
     /* Tăng hoặc giảm số lượng sản phẩm */
     public function edit(CartRequest $request)
     {
@@ -98,7 +128,7 @@ class CartController extends Controller
                 'message' => 'Product is out of stock.'
             ], 409);
 
-        $this->syncProducts($cart);
+        $this->syncCartProductQuantity($cart);
 
         if($validated['quantity'] > $product->stock)
             return response()->json([
@@ -130,12 +160,12 @@ class CartController extends Controller
 
         $cart->products()->detach($validated['product_id']);
 
-        $this->syncProducts($cart);
+        $this->syncCartProductQuantity($cart);
 
         return new CartResource($cart->load('products'));
     }
 
-    protected function syncProducts(Cart $cart)
+    protected function syncCartProductQuantity(Cart $cart)
     {
         foreach ($cart->products as $product) {
             if($product->stock < $product->pivot->quantity)

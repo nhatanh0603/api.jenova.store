@@ -45,6 +45,7 @@ Route::prefix('category')->group(function(){
 Route::middleware('auth:sanctum')->prefix('cart')->group(function() {
     Route::get('/whole', [CartController::class, 'show']);
     Route::post('/add', [CartController::class, 'store']);
+    Route::post('/checkout', [CartController::class, 'checkout']);
     Route::patch('/quantity', [CartController::class, 'edit']);
     Route::delete('/delete', [CartController::class, 'destroy']);
 });
