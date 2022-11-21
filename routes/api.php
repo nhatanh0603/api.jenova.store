@@ -4,7 +4,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GenerateController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -33,13 +35,15 @@ Route::prefix('auth')->group(function() {
 });
 
 Route::prefix('product')->group(function() {
-    Route::get('/whole', [ProductController::class, 'index']);
+    Route::get('/whole/{record?}', [ProductController::class, 'index']);
     Route::get('/{slug}', [ProductController::class, 'show']);
 });
 
+Route::get('/search/{keyword}', [SearchController::class, 'search']);
+
 Route::prefix('category')->group(function(){
     Route::get('/whole', [CategoryController::class, 'index']); //show all category (đã được nhóm)
-    Route::get('/{id}/products', [CategoryController::class, 'show']); //show all sản phẩm của category
+    Route::get('/{id}/products/{record?}', [CategoryController::class, 'show']); //show all sản phẩm của category
 });
 
 Route::middleware('auth:sanctum')->prefix('cart')->group(function() {
@@ -48,4 +52,10 @@ Route::middleware('auth:sanctum')->prefix('cart')->group(function() {
     Route::post('/checkout', [CartController::class, 'checkout']);
     Route::patch('/quantity', [CartController::class, 'edit']);
     Route::delete('/delete', [CartController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum')->prefix('order')->group(function() {
+    Route::get('/whole/{record?}', [OrderController::class, 'index']);
+    Route::get('/{id}', [OrderController::class, 'show']);
+    Route::post('/place', [OrderController::class, 'store']);
 });

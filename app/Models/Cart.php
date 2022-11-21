@@ -27,4 +27,14 @@ class Cart extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function sync_product_quantity()
+    {
+        foreach ($this->products as $product) {
+            if($product->stock < $product->pivot->quantity)
+                $this->products()->updateExistingPivot($product->id, [
+                    'quantity' => $product->stock
+                ]);
+        }
+    }
 }

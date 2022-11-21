@@ -20,7 +20,7 @@ class CartController extends Controller
                 'message' => 'Cart does not exist.'
             ], 404);
 
-        $this->syncCartProductQuantity($cart);
+        $cart->sync_product_quantity();
 
         return new CartResource(auth()->user()->cart->load('products'));
     }
@@ -93,6 +93,7 @@ class CartController extends Controller
                 if($product->stock < $quantity)
                     return response()->json([
                         'message' => 'Some products are not enough units in stock. Your cart will be updated. Please try again.'
+                        //Some product information in your order has been updated, please go back to cart page and try again.
                     ], 409);
                 else
                     $id_array[] = $product_id;
@@ -128,7 +129,7 @@ class CartController extends Controller
                 'message' => 'Product is out of stock.'
             ], 409);
 
-        $this->syncCartProductQuantity($cart);
+        $cart->sync_product_quantity();
 
         if($validated['quantity'] > $product->stock)
             return response()->json([
@@ -160,18 +161,8 @@ class CartController extends Controller
 
         $cart->products()->detach($validated['product_id']);
 
-        $this->syncCartProductQuantity($cart);
+        $cart->sync_product_quantity();
 
         return new CartResource($cart->load('products'));
-    }
-
-    protected function syncCartProductQuantity(Cart $cart)
-    {
-        foreach ($cart->products as $product) {
-            if($product->stock < $product->pivot->quantity)
-                $cart->products()->updateExistingPivot($product->id, [
-                    'quantity' => $product->stock
-                ]);
-        }
     }
 }

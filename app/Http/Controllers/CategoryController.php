@@ -12,8 +12,8 @@ class CategoryController extends Controller
         return response(gatherChilds(Category::all()));
     }
 
-    public function show($id)
+    public function show($id, $record = 15)
     {
-        return new ProductSimpleCollection(Category::findOrFail($id)->products()->cursorPaginate(15));
+        return new ProductSimpleCollection(Category::findOrFail($id)->products()->cursorPaginate($record));
     }
 }

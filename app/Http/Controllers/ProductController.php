@@ -10,9 +10,9 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index($record = 15)
     {
-        return new ProductSimpleCollection(Product::cursorPaginate(15));
+        return new ProductSimpleCollection(Product::cursorPaginate($record));
     }
 
     public function show($slug)

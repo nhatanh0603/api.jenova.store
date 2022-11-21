@@ -238,8 +238,8 @@ class GenerateController extends Controller
                 'name' => $name == 'zuus' ? 'zeus': $name,
                 'slug' => Str::slug(Str::lower($hero->name_loc, '-')),
                 'display_name' => $hero->name_loc,
-                'price' => fake()->randomFloat(2, 29, 99), //rand(29, 99) + rand(10, 100)/100,
-                'stock' => fake()->numberBetween(10, 100),
+                'price' => fake()->randomFloat(2, 49, 199), //rand(29, 99) + rand(10, 100)/100,
+                'stock' => fake()->numberBetween(999, 2000),
                 'created_at' => now()->format('Y-m-d H:i:s'),
                 'updated_at' => now()->format('Y-m-d H:i:s')
             ];

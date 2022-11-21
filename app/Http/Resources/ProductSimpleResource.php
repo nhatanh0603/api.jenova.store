@@ -23,8 +23,8 @@ class ProductSimpleResource extends JsonResource
             'display_name' => $this->display_name,
             'price' => $this->price,
             'stock' => $this->stock,
-            $this->mergeWhen($this->pivot->quantity, [
-                'quantity' => $this->pivot->quantity
+            $this->mergeWhen($this->pivot?->quantity, [
+                'quantity' => $this->pivot?->quantity
             ]),
             $this->mergeWhen($extra, [
                 $extra[0]->name => $extra[0]->value,
