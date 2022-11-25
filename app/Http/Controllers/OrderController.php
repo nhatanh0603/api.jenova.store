@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\OrderCollection;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\ProductSimpleCollection;
 use App\Models\Order;
@@ -18,9 +17,14 @@ class OrderController extends Controller
 
     public function show($id)
     {
-        $order = DB::table('orders')->where('user_id', auth()->user()->id)->where('id', $id)->first();
-        $order->order_detail = DB::table('order_details')->where('order_id', $id)->get();
-        return new OrderResource($order);
+        $order = Order::where('id', $id)->where('user_id', auth()->user()->id)->first();
+
+        if($order)
+            return new OrderResource($order->with_order_details());
+        else
+            return response()->json([
+                'message' => 'Order Not Found.'
+            ], 404);
     }
 
     public function store()
@@ -32,7 +36,7 @@ class OrderController extends Controller
         $price_updated = false;
         $total_price = 0;
 
-        foreach ($validated['order'] as $item) {
+        foreach ($validated['order'] as $key => $item) {
             $product = Product::find($item['id']);
 
             /* Kiểm tra product có tồn tại không? */
@@ -57,19 +61,22 @@ class OrderController extends Controller
             $id_array[] = $item['id'];
             $total_price += $product->price * $item['quantity'];
 
-            //$product->extra_columns();
             $order_details[$product->id]['name'] = $product->name;
             $order_details[$product->id]['slug'] = $product->slug;
             $order_details[$product->id]['display_name'] = $product->display_name;
             $order_details[$product->id]['primary_attribute'] = $product->extra_columns()[1]->value;
             $order_details[$product->id]['amount'] = $product->price;
             $order_details[$product->id]['quantity'] = $item['quantity'];
+
+            $fixed_price_product[$key] = $product;
+            $fixed_price_product[$key]->quantity = $item['quantity'];
+            unset($fixed_price_product[$key]->categories);
         }
 
         if($price_updated)
             return response()->json([
                 'message' => $message,
-                'products' => new ProductSimpleCollection(auth()->user()->cart->products->whereIn('id', $id_array))
+                'products' => new ProductSimpleCollection($fixed_price_product)
             ], 409);
 
         try {
@@ -90,11 +97,8 @@ class OrderController extends Controller
             });
 
             return response()->json([
-                'message' => [
-                    'first' => 'Order Successfully Placed.',
-                    'second' => 'Thank You For Your Purchase!',
-                    'order' => $order
-                ]
+                'message' => 'Order Successfully Placed.',
+                'order' => new OrderResource($order->with_order_details())
             ]);
         } catch (\Throwable $th) {
             return response()->json([

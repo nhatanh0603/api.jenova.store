@@ -43,7 +43,7 @@ Route::get('/search/{keyword}', [SearchController::class, 'search']);
 
 Route::prefix('category')->group(function(){
     Route::get('/whole', [CategoryController::class, 'index']); //show all category (đã được nhóm)
-    Route::get('/{id}/products/{record?}/{order?}/{sort?}', [CategoryController::class, 'show']); //show all sản phẩm của category
+    Route::get('/{id}/products', [CategoryController::class, 'show']); //show all sản phẩm của category
 });
 
 Route::middleware('auth:sanctum')->prefix('cart')->group(function() {

@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id();
+            $table->ulid('id');
             $table->unsignedBigInteger('user_id');
             $table->tinyInteger('unique_product'); //số lượng product khác nhau
             $table->float('total_price', 6, 2);

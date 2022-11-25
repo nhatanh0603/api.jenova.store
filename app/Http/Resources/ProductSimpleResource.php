@@ -26,6 +26,9 @@ class ProductSimpleResource extends JsonResource
             $this->mergeWhen($this->pivot?->quantity, [
                 'quantity' => $this->pivot?->quantity
             ]),
+            $this->mergeWhen($this?->quantity, [
+                'quantity' => $this?->quantity
+            ]),
             $this->mergeWhen($extra, [
                 $extra[0]->name => $extra[0]->value,
                 $extra[1]->name => (int) $extra[1]->value,

@@ -3,10 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ProductResource;
-use App\Http\Resources\ProductSimpleCollection;
 use App\Models\Category;
-use Illuminate\Support\Facades\DB;
-use Mockery\Generator\StringManipulation\Pass\CallTypeHintPass;
 
 class CategoryController extends Controller
 {
@@ -25,10 +22,18 @@ class CategoryController extends Controller
      * @param  string $direction price complexity attack_type
      * @return array
      */
-    public function show($id, $record = 15, $column = 'price', $direction = 'desc')
+    public function show($id)
     {
-        return ProductResource::collection(Category::findOrFail($id)
-                                                    ->products_with_bonus($column, $direction)
-                                                    ->cursorPaginate($record));
+        $validated = request()->validate([
+            'record' => 'required|string',
+            'column' => 'required|string',
+            'direction' => 'required|string',
+            'primary_attr' => 'nullable|string',
+            'attack_capability' => 'nullable|string',
+            'complexity' => 'nullable|string',
+        ]);
+
+        return ProductResource::collection(Category::findOrFail($id)->products_with_bonus($validated)
+                                                                    ->cursorPaginate($validated['record']));
     }
 }

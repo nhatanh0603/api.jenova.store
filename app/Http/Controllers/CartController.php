@@ -82,25 +82,28 @@ class CartController extends Controller
             'checkout' => 'required|array'
         ]);
 
-        foreach ($validated['checkout'] as $product_id => $quantity) {
-            $product = Product::find($product_id);
+        foreach ($validated['checkout'] as $item) {
+            $product = Product::find($item['id']);
 
             if(!$product)
                 return response()->json([
                     'message' => 'Product does not exist.'
                 ], 404);
             else
-                if($product->stock < $quantity)
+                if($product->stock < $item['quantity'])
                     return response()->json([
                         'message' => 'Some products are not enough units in stock. Your cart will be updated. Please try again.'
                         //Some product information in your order has been updated, please go back to cart page and try again.
                     ], 409);
-                else
-                    $id_array[] = $product_id;
+                else {
+                    //$id_array[] = $item['id'];
+                    $product->quantity = $item['quantity'];
+                    $checkout[] = $product;
+                }
         }
 
         /* Dòng này để sắp xếp lại thứ tự theo thời gian add to cart */
-        $checkout = auth()->user()->cart->products->whereIn('id', $id_array);
+        //$checkout = auth()->user()->cart->products->whereIn('id', $id_array);
 
         return new ProductSimpleCollection($checkout);
     }

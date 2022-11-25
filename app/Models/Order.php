@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Order extends Model
 {
     use HasFactory;
+    use HasUlids;
 
     protected $fillable = ['user_id', 'unique_product', 'total_price'];
 
@@ -22,6 +25,12 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function with_order_details()
+    {
+        $this->order_detail = DB::table('order_details')->where('order_id', $this->id)->get();
+        return $this;
     }
 
     public function update_product_stock()
