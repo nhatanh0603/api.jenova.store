@@ -18,6 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->tinyInteger('unique_product'); //số lượng product khác nhau
             $table->float('total_price', 6, 2);
+            $table->jsonb('extra_data')->nullable();
             $table->timestamps();
         });
     }

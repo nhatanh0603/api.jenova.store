@@ -30,7 +30,8 @@ class OrderController extends Controller
     public function store()
     {
         $validated = request()->validate([
-            'order' => 'required|array|filled'
+            'order' => 'required|array|filled',
+            'buy_now' => 'required|boolean'
         ]);
 
         $price_updated = false;
@@ -84,20 +85,22 @@ class OrderController extends Controller
                 $order = Order::create([
                     'user_id' => auth()->user()->id,
                     'unique_product' => count($validated['order']),
-                    'total_price' => $total_price
+                    'total_price' => $total_price,
+                    'extra_data' => json_encode(collect($order_details)->values())
                 ]);
 
                 $order->products()->attach($order_details);
 
                 $order->update_product_stock();
 
-                auth()->user()->cart->products()->detach($id_array);
+                if(!$validated['buy_now'])
+                    auth()->user()->cart->products()->detach($id_array);
 
                 return $order;
             });
 
             return response()->json([
-                'message' => 'Order Successfully Placed.',
+                'message' => 'Order successfully placed.',
                 'order' => new OrderResource($order->with_order_details())
             ]);
         } catch (\Throwable $th) {

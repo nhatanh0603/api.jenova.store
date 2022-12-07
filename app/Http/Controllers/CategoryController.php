@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\ProductSimpleResource;
 use App\Models\Category;
 
 class CategoryController extends Controller
@@ -35,5 +36,28 @@ class CategoryController extends Controller
 
         return ProductResource::collection(Category::findOrFail($id)->products_with_bonus($validated)
                                                                     ->cursorPaginate($validated['record']));
+    }
+
+    /**
+     * Get random list of products.
+     *
+     * @param  mixed $quantum
+     * @return Response JsonResource
+     */
+    public function random($quantum = 9)
+    {
+        return response()->json([
+            'data' => [
+                'strength' => ProductSimpleResource::collection(
+                    Category::find(2)->products()->inRandomOrder()->take($quantum)->get()
+                ),
+                'agility' => ProductSimpleResource::collection(
+                    Category::find(3)->products()->inRandomOrder()->take($quantum)->get()
+                ),
+                'intelligence' => ProductSimpleResource::collection(
+                    Category::find(4)->products()->inRandomOrder()->take($quantum)->get()
+                )
+            ]
+        ]);
     }
 }

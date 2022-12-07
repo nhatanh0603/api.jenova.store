@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AuthRequest;
 use App\Http\Resources\UserResource;
-use App\Models\Cart;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Enums\Gender;
+use App\Http\Resources\HeroCardResource;
+use App\Models\Product;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rules\Enum;
 
 class AuthController extends Controller
 {
@@ -24,7 +29,32 @@ class AuthController extends Controller
     }
 
     /**
-     * Sign up a user with user_name, email and password.
+     * Get user's owned cards.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function showCards() {
+        $id_array = DB::table('order_details')->join('orders', 'orders.id', '=', 'order_details.order_id')
+                        ->where('orders.user_id', auth()->user()->id)
+                        ->select('product_id', DB::raw('SUM(quantity) AS quantity, MAX(name) AS name'))
+                        ->groupBy('product_id')->get();
+
+        if(count($id_array) > 0) {
+            foreach ($id_array as $key => $value) {
+                $products[$key] = Product::find($value->product_id);
+                $products[$key]->unit = $value->quantity;
+            }
+
+            return HeroCardResource::collection(collect($products)->sortBy('id')->values());
+        } else {
+            return response()->json([
+                'data' => []
+            ]);
+        }
+    }
+
+    /**
+     * Sign up a user with username, email and password.
      *
      * @param  \App\Http\Requests\AuthRequest  $request
      * @return \Illuminate\Http\Response
@@ -34,7 +64,7 @@ class AuthController extends Controller
         $validated = $request->validated();
 
         $user = User::create([
-            'user_name' => $validated['user_name'],
+            'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password'])
         ]);
@@ -74,9 +104,65 @@ class AuthController extends Controller
     }
 
     /**
+     * Update a user information.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function update()
+    {
+        $validated = request()->validate([
+            'username' => 'required|alpha_dash|max:40',
+            'fullname' =>  'nullable|string|max:100',
+            'address' =>  'nullable|string|max:255',
+            'phone' =>  'nullable|digits:10',
+            'birthday' =>  'nullable|date|date_format:Y-m-d',
+            'gender' =>  ['nullable', new Enum(Gender::class)]
+        ]);
+
+        try {
+            auth()->user()->update($validated);
+
+            return response()->json([
+                'message' => 'Your profile has been updated successfully.'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ops, something went wrong. Please try again later.'
+            ], 409);
+        }
+    }
+
+    /**
+     * Change User's Password.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function updatePassword()
+    {
+        $validated = request()->validate([
+            'old_password' => ['bail', 'current_password:sanctum', 'required', 'string', Password::min(6)->letters()->numbers(), 'max:100'],
+            'new_password' => ['bail', 'confirmed', 'different:old_password', 'required', 'string', Password::min(6)->letters()->numbers(), 'max:100'],
+            'new_password_confirmation' => ['bail', 'required', 'string', Password::min(6)->letters()->numbers(), 'max:100']
+        ]);
+
+        try {
+            auth()->user()->fill([
+                'password' => bcrypt($validated['new_password'])
+            ])->save();
+
+            return response()->json([
+                'message' => 'Your password was successfully changed.'
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => 'Ops, something went wrong. Please try again later.'
+            ], 409);
+        }
+    }
+
+    /**
      * Sign out a user from a current device.
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function signout()

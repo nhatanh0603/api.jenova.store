@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ProductDetailResource;
 use App\Http\Resources\ProductSimpleCollection;
+use App\Http\Resources\ProductSimpleResource;
 use App\Models\Product;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -13,6 +14,19 @@ class ProductController extends Controller
     public function index($record = 15)
     {
         return new ProductSimpleCollection(Product::cursorPaginate($record));
+    }
+
+    public function random($quantum = 9)
+    {
+        $products = collect(ProductSimpleResource::collection(Product::inRandomOrder()->get()));
+
+        return response()->json([
+            'data' => [
+                'strength' => $products->where('primary_attr', 0)->take($quantum)->values(),
+                'agility' => $products->where('primary_attr', 1)->take($quantum)->values(),
+                'intelligence' => $products->where('primary_attr', 2)->take($quantum)->values()
+            ]
+        ]);
     }
 
     public function show($slug)

@@ -12,7 +12,7 @@ class Order extends Model
     use HasFactory;
     use HasUlids;
 
-    protected $fillable = ['user_id', 'unique_product', 'total_price'];
+    protected $fillable = ['user_id', 'unique_product', 'total_price', 'extra_data'];
 
     public function products()
     {

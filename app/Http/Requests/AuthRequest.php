@@ -25,7 +25,7 @@ class AuthRequest extends FormRequest
     public function rules()
     {
         return [
-            'user_name' => 'bail|required|string|max:40',
+            'username' => 'bail|required|alpha_dash|max:40',
             'email' => 'bail|required|string|email|unique:users',
             'password'=> ['bail', 'required', 'string', Password::min(6)->letters()->numbers(), 'max:100']
         ];
