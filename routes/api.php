@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GenerateController;
+use App\Http\Controllers\NewsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->prefix('generate')->controller(GenerateController::class)->group(function() {
+Route::/* middleware('auth:sanctum')-> */prefix('generate')->controller(GenerateController::class)->group(function() {
     Route::get('/media/{type}', 'generateMediaLinkForDownload');
     Route::get('/hero/{id}/{ability_only?}', 'generateHeroDetail');
     Route::get('/seeder/{type}', 'generateSeeder');
@@ -45,7 +46,14 @@ Route::prefix('product')->group(function() {
 
 Route::get('/search/{keyword}', [SearchController::class, 'search']);
 
-Route::prefix('category')->group(function(){
+
+Route::prefix('/news')->controller(NewsController::class)->group(function() {
+    Route::get('/whole/{record?}', 'index');
+    Route::get('/{slug}', 'show');
+
+});
+
+Route::prefix('category')->group(function() {
     Route::get('/whole', [CategoryController::class, 'index']); //show all category (đã được nhóm)
     Route::get('/{id}/products', [CategoryController::class, 'show']); //show all sản phẩm của category
     Route::get('/random/{quantum?}', [CategoryController::class, 'random']); // faster
