@@ -21,27 +21,32 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::/* middleware('auth:sanctum')-> */prefix('generate')->controller(GenerateController::class)->group(function() {
+/* Route::middleware('auth:sanctum')->prefix('generate')->controller(GenerateController::class)->group(function() {
     Route::get('/media/{type}', 'generateMediaLinkForDownload');
     Route::get('/hero/{id}/{ability_only?}', 'generateHeroDetail');
     Route::get('/seeder/{type}', 'generateSeeder');
+}); */
+
+
+Route::prefix('auth')->controller(AuthController::class)->group(function() {
+    Route::middleware('auth:sanctum')->group(function() {
+        Route::get('/user', 'show');
+        Route::get('/cards', 'showCards');
+        Route::patch('/update', 'update');
+        Route::patch('/update-password', 'updatePassword');
+        Route::delete('/signout', 'signout');
+    });
+
+    Route::post('/signup', 'signup');
+    Route::post('/signin', 'signin');
+    Route::post('/forgot-password', 'forgotPassword');
+    Route::post('/reset-password', 'resetPassword');
 });
 
-
-Route::prefix('auth')->group(function() {
-    Route::get('/user', [AuthController::class, 'show'])->middleware('auth:sanctum');
-    Route::get('/cards', [AuthController::class, 'showCards'])->middleware('auth:sanctum');
-    Route::post('/signup', [AuthController::class, 'signup']);
-    Route::post('/signin', [AuthController::class, 'signin']);
-    Route::patch('/update', [AuthController::class, 'update'])->middleware('auth:sanctum');
-    Route::patch('/update-password', [AuthController::class, 'updatePassword'])->middleware('auth:sanctum');
-    Route::delete('/signout', [AuthController::class, 'signout'])->middleware('auth:sanctum');
-});
-
-Route::prefix('product')->group(function() {
-    Route::get('/whole/{record?}', [ProductController::class, 'index']);
-    Route::get('/random/{quantum?}', [ProductController::class, 'random']); // chậm hơn so với dùng category
-    Route::get('/{slug}', [ProductController::class, 'show']);
+Route::prefix('product')->controller(ProductController::class)->group(function() {
+    Route::get('/whole/{record?}', 'index');
+    Route::get('/random/{quantum?}', 'random'); // chậm hơn so với dùng category
+    Route::get('/{slug}', 'show');
 });
 
 Route::get('/search/{keyword}', [SearchController::class, 'search']);
@@ -53,22 +58,28 @@ Route::prefix('/news')->controller(NewsController::class)->group(function() {
 
 });
 
-Route::prefix('category')->group(function() {
-    Route::get('/whole', [CategoryController::class, 'index']); //show all category (đã được nhóm)
-    Route::get('/{id}/products', [CategoryController::class, 'show']); //show all sản phẩm của category
-    Route::get('/random/{quantum?}', [CategoryController::class, 'random']); // faster
+Route::prefix('category')->controller(CategoryController::class)->group(function() {
+    Route::get('/whole', 'index'); //show all category (đã được nhóm)
+    Route::get('/{id}/products', 'show'); //show all sản phẩm của category
+    Route::get('/random/{quantum?}', 'random'); // faster
 });
 
-Route::middleware('auth:sanctum')->prefix('cart')->group(function() {
-    Route::get('/whole', [CartController::class, 'show']);
-    Route::post('/add', [CartController::class, 'store']);
-    Route::post('/checkout', [CartController::class, 'checkout']);
-    Route::patch('/quantity', [CartController::class, 'edit']);
-    Route::delete('/delete', [CartController::class, 'destroy']);
+Route::middleware('auth:sanctum')->prefix('cart')->controller(CartController::class)->group(function() {
+    Route::get('/whole', 'show');
+    Route::post('/add', 'store');
+    Route::post('/checkout', 'checkout');
+    Route::patch('/quantity', 'edit');
+    Route::delete('/delete', 'destroy');
 });
 
-Route::middleware('auth:sanctum')->prefix('order')->group(function() {
-    Route::get('/whole/{record?}', [OrderController::class, 'index']);
-    Route::get('/{id}', [OrderController::class, 'show']);
-    Route::post('/place', [OrderController::class, 'store']);
+Route::middleware('auth:sanctum')->prefix('order')->controller(OrderController::class)->group(function() {
+    Route::get('/whole/{record?}', 'index');
+    Route::get('/{id}', 'show');
+    Route::post('/place', 'store');
 });
+
+/* Route::get('/mailable', function () {
+    $token = 'db011bbfb7cd579c443da1b0a095c2365162989774bf1ca323655550b25a212c';
+
+    return new App\Mail\ResetPassword(App\Models\User::find(1), $token);
+}); */

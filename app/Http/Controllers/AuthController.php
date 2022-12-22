@@ -10,10 +10,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Enums\Gender;
 use App\Http\Resources\HeroCardResource;
+use App\Jobs\SendEmail;
+use App\Mail\ResetPassword;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rules\Password as PasswordValidator;
 use Illuminate\Validation\Rules\Enum;
+use Illuminate\Support\Facades\Password;
+use App\Mail\Test;
 
 class AuthController extends Controller
 {
@@ -140,9 +144,9 @@ class AuthController extends Controller
     public function updatePassword()
     {
         $validated = request()->validate([
-            'old_password' => ['bail', 'current_password:sanctum', 'required', 'string', Password::min(6)->letters()->numbers(), 'max:100'],
-            'new_password' => ['bail', 'confirmed', 'different:old_password', 'required', 'string', Password::min(6)->letters()->numbers(), 'max:100'],
-            'new_password_confirmation' => ['bail', 'required', 'string', Password::min(6)->letters()->numbers(), 'max:100']
+            'old_password' => ['bail', 'current_password:sanctum', 'required', 'string', PasswordValidator::min(6)->letters()->numbers(), 'max:100'],
+            'new_password' => ['bail', 'confirmed', 'different:old_password', 'required', 'string', PasswordValidator::min(6)->letters()->numbers(), 'max:100'],
+            'new_password_confirmation' => ['bail', 'required', 'string', PasswordValidator::min(6)->letters()->numbers(), 'max:100']
         ]);
 
         try {
@@ -158,6 +162,62 @@ class AuthController extends Controller
                 'message' => 'Ops, something went wrong. Please try again later.'
             ], 409);
         }
+    }
+
+    /**
+     * Handle User's Request Forgot Password.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function forgotPassword()
+    {
+        request()->validate(['email' => 'required|email']);
+
+        $status = Password::sendResetLink(
+            request()->only('email'),
+            function($user, $token) {
+                SendEmail::dispatch(new ResetPassword($user, $token), $user);
+            }
+        );
+
+        $statusCode = $status === Password::INVALID_USER ? 404 :
+                     ($status === Password::RESET_THROTTLED ? 409 : 200);
+
+        return response()->json([
+            'message' => __($status)
+        ], $statusCode);
+    }
+
+    /**
+     * Handle User's Request To Reset Password.
+     * vendor\laravel\framework\src\Illuminate\Auth\Passwords\PasswordBroker.php
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function resetPassword()
+    {
+        request()->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password'=> ['required', 'string', PasswordValidator::min(6)->letters()->numbers(), 'max:100', 'confirmed'],
+        ]);
+
+        $status = Password::reset(
+            request()->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ]);
+
+                $user->save();
+            }
+        );
+
+        $statusCode = $status === Password::PASSWORD_RESET ? 200 : 404;
+
+        return response()->json([
+            'message' => __($status)
+        ], $statusCode);
     }
 
     /**
