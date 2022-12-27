@@ -32,6 +32,10 @@ Route::prefix('auth')->controller(AuthController::class)->group(function() {
     Route::middleware('auth:sanctum')->group(function() {
         Route::get('/user', 'show');
         Route::get('/cards', 'showCards');
+        Route::post('/change-email/send-otp', 'sendOtpToCurrentEmail');
+        Route::post('/change-email/verify-otp', 'verifyCurrentEmailCode');
+        Route::post('/change-email/send-otp-new-email', 'sendOtpToNewEmail');
+        Route::post('/change-email/update-email', 'updateNewEmail');
         Route::patch('/update', 'update');
         Route::patch('/update-password', 'updatePassword');
         Route::delete('/signout', 'signout');
@@ -79,7 +83,5 @@ Route::middleware('auth:sanctum')->prefix('order')->controller(OrderController::
 });
 
 /* Route::get('/mailable', function () {
-    $token = 'db011bbfb7cd579c443da1b0a095c2365162989774bf1ca323655550b25a212c';
-
-    return new App\Mail\ResetPassword(App\Models\User::find(1), $token);
+    return new App\Mail\EmailChanged('E-mail address is successfully changed', App\Models\User::find(1));
 }); */

@@ -283,12 +283,17 @@ class GenerateController extends Controller
                 'name' => $name == 'zuus' ? 'zeus': $name,
                 'slug' => Str::slug(Str::lower($hero->name_loc, '-')),
                 'display_name' => $hero->name_loc,
-                'price' => fake()->randomFloat(2, 49, 199), //rand(29, 99) + rand(10, 100)/100,
-                'stock' => fake()->numberBetween(999, 2000),
+                //'price' => fake()->randomFloat(2, 49, 199), //rand(29, 99) + rand(10, 100)/100,
+                'price' => $this->calcPrice($hero),
+                'stock' => fake()->numberBetween(2000, 3000),
                 'created_at' => now()->format('Y-m-d H:i:s'),
                 'updated_at' => now()->format('Y-m-d H:i:s')
             ];
         }
+
+        // return collect($insert_list)->sortByDesc(function($hero) {
+        //     return $hero['price'];
+        // })->values()->all();
 
         return Storage::put('seeder-products.json', json_encode($insert_list));
     }
@@ -810,5 +815,38 @@ class GenerateController extends Controller
         $response['img_link'] = $link_for_download;
 
         return $response;
+    }
+
+    private $role_price = [
+        [31, 49, 95], // 'carry'
+        [8, 17, 32], // 'support'
+        [16, 26, 45], // 'nuker'
+        [7, 14, 27], // 'disabler'
+        [4, 9, 19], // 'jungler'
+        [9, 18, 37], // 'durable'
+        [10, 19, 38], // 'escape'
+        [14, 25, 45], // 'pusher'
+        [11, 20, 41] // 'initiator'
+    ];
+
+    /* Calculate Hero's Price */
+    protected function calcPrice($hero)
+    {
+        $base_price = ($hero->max_health / 100) + $hero->health_regen
+                    + ($hero->max_mana / 100) + $hero->mana_regen
+                    + ($hero->str_base / 10) + $hero->str_gain
+                    + ($hero->agi_base / 10) + $hero->agi_gain
+                    + ($hero->int_base / 10) + $hero->int_gain
+                    + (fake()->numberBetween($hero->damage_min, $hero->damage_max) / 5)
+                    - $hero->attack_rate + $hero->armor * 2
+                    + ($hero->movement_speed / 50) - $hero->turn_rate
+                    + ($hero->sight_range_day / 1000) + ($hero->sight_range_night / 1000);
+
+        foreach ($hero->role_levels as $key => $role) {
+            if($role > 0)
+                $base_price += $this->role_price[$key][$role - 1];
+        }
+
+        return number_format($base_price, 2);
     }
 }
