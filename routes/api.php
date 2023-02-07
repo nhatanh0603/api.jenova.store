@@ -53,8 +53,10 @@ Route::prefix('product')->controller(ProductController::class)->group(function()
     Route::get('/{slug}', 'show');
 });
 
-Route::get('/search/{keyword}', [SearchController::class, 'search']);
-
+Route::prefix('search')->controller(SearchController::class)->group(function() {
+    Route::get('/{keyword}', 'search');
+    Route::get('/order/{keyword}', 'searchOrder')->middleware('auth:sanctum');
+});
 
 Route::prefix('/news')->controller(NewsController::class)->group(function() {
     Route::get('/whole/{record?}', 'index');

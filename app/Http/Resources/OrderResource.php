@@ -14,6 +14,9 @@ class OrderResource extends JsonResource
      */
     public function toArray($request)
     {
+        if(!isset($this->order_detail))
+            $this->order_detail = null;
+
         return [
             'id' => $this->id,
             'unique_product' => $this->unique_product,
